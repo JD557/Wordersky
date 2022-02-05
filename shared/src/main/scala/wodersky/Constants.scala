@@ -1,4 +1,4 @@
-package eu.joaocosta.spacegame
+package eu.joaocosta.wodersky
 
 object Constants {
   val tileSize = 32

@@ -1,4 +1,4 @@
-package eu.joaocosta.spacegame
+package eu.joaocosta.wodersky
 
 import eu.joaocosta.minart.backend.defaults._
 import eu.joaocosta.minart.graphics.image._
@@ -7,15 +7,14 @@ import eu.joaocosta.minart.graphics.pure._
 import eu.joaocosta.minart.runtime._
 import eu.joaocosta.minart.runtime.pure._
 import eu.joaocosta.minart.input.KeyboardInput
-import eu.joaocosta.spacegame.Constants._
-
-import scala.util.chaining._
+import eu.joaocosta.wodersky.Constants._
 
 object Main extends MinartApp {
 
+  val day = (System.currentTimeMillis() / (1000 * 60 * 60 * 24)).toInt
   val dictionary = Resource("assets/dictionary.txt").withSource(source =>
-    source.getLines().map(_.toLowerCase()).toVector
-  ).map(scala.util.Random(0).shuffle).get
+    source.getLines().map(_.toLowerCase()).toList
+  ).map(scala.util.Random(day).shuffle).get
 
   val font = Image.loadQoiImage(Resource("assets/font.qoi")).get
   val tiles = Image.loadQoiImage(Resource("assets/tiles.qoi")).get
@@ -55,17 +54,11 @@ object Main extends MinartApp {
     }
   }
 
-  println(s"Loaded ${dictionary.size} words")
-
-  val day = ((System.currentTimeMillis() / (1000 * 60 * 60 * 24)) % dictionary.size).toInt
-
-  println(s"Word of the day: ${dictionary(day)}")
-
   type State = GameState
   val loopRunner     = LoopRunner()
   val canvasSettings = Canvas.Settings(width = screenWidth, height = screenHeight, scale = 1, clearColor = Color(255, 255, 255))
   val canvasManager  = CanvasManager()
-  val initialState   = GameState(List("scala", "circe", "spray"), "teste", dictionary(day))
+  val initialState   = GameState(dictionary = dictionary)
   val frameRate      = LoopFrequency.hz60
   val terminateWhen  = (_: State) => false
 
@@ -75,6 +68,46 @@ object Main extends MinartApp {
     "zxcvbnm",
   ).map(_.toList)
 
+  val keyToChar: Map[KeyboardInput.Key, Char] = {
+    import eu.joaocosta.minart.input.KeyboardInput.Key._
+    Map(
+      A -> 'a',
+      B -> 'b',
+      C -> 'c',
+      D -> 'd',
+      E -> 'e',
+      F -> 'f',
+      G -> 'g',
+      H -> 'h',
+      I -> 'i',
+      J -> 'j',
+      K -> 'k',
+      L -> 'l',
+      M -> 'm',
+      N -> 'n',
+      O -> 'o',
+      P -> 'p',
+      Q -> 'q',
+      R -> 'r',
+      S -> 's',
+      T -> 't',
+      U -> 'u',
+      V -> 'v',
+      W -> 'w',
+      X -> 'x',
+      Y -> 'y',
+      Z -> 'z'
+    )
+  }
+
+  def nextState(state: GameState, input: KeyboardInput): GameState = {
+    if (input.keysPressed(KeyboardInput.Key.Backspace))
+      state.backspace
+    else if (input.keysPressed(KeyboardInput.Key.Enter))
+      state.enterGuess
+    else input.keysPressed.flatMap(key => keyToChar.get(key)).headOption.fold(state)(char => state.addChar(char))
+  }
+
   val renderFrame = (state: GameState) => for {
     _ <- CanvasIO.redraw
     input <- CanvasIO.getKeyboardInput
@@ -82,5 +115,5 @@ object Main extends MinartApp {
     _ <- writeString(titleX, titleY, titleSpacing, title)
     _ <- drawTiles(tilesPadding, tilesY, state.tiles)
     _ <- drawTiles(keyboardPadding, keyboardY, keyOrder.map(_.map(k => Some(k) -> state.keys(k))))
-  } yield state
+  } yield nextState(state, input)
 }

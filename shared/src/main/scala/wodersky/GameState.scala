@@ -1,13 +1,30 @@
-package eu.joaocosta.spacegame
+package eu.joaocosta.wodersky
 
-import eu.joaocosta.spacegame.Constants._
-import eu.joaocosta.spacegame.GameState._
+import eu.joaocosta.wodersky.Constants._
+import eu.joaocosta.wodersky.GameState._
 
 case class GameState(
   guesses: List[String] = Nil,
   currentGuess: String = "",
-  solution: String = ""
+  dictionary: List[String] = Nil
 ) {
+
+  val solution = dictionary.head
+
+  def addChar(char: Char): GameState =
+    if (currentGuess.size >= 5) this
+    else copy(currentGuess = currentGuess + char)
+
+  def backspace =
+    copy(currentGuess = currentGuess.init)
+
+  def enterGuess =
+    if (currentGuess.size < 5 || !dictionary.contains(currentGuess)) this
+    else copy(
+      guesses = guesses :+ currentGuess,
+      currentGuess = ""
+    )
+
   val tiles: List[List[(Option[Char], TileState)]] = {
     val emptyTile = (None, TileState.Empty)
     val guessedTiles: List[List[(Option[Char], TileState)]] =
