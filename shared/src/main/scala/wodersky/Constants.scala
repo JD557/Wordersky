@@ -1,5 +1,7 @@
 package eu.joaocosta.wodersky
 
+import eu.joaocosta.minart.input.KeyboardInput
+
 object Constants {
   val puzzleInterval = (1000 * 60 * 60 * 24)
   val firstPuzzle = 19028
@@ -26,4 +28,49 @@ object Constants {
   val keyboardY = tilesY + 6 * (tileSize + tileSpacing) + componentSpacing
 
   val screenHeight = keyboardY + 3 * (tileSize + tileSpacing) + componentSpacing
+
+  val keyOrder = List(
+    "qwertyuiop",
+    "asdfghjkl",
+    "zxcvbnm",
+  ).map(_.toList)
+
+  val keyToChar: Map[KeyboardInput.Key, Char] = {
+    import eu.joaocosta.minart.input.KeyboardInput.Key._
+    Map(
+      A -> 'a',
+      B -> 'b',
+      C -> 'c',
+      D -> 'd',
+      E -> 'e',
+      F -> 'f',
+      G -> 'g',
+      H -> 'h',
+      I -> 'i',
+      J -> 'j',
+      K -> 'k',
+      L -> 'l',
+      M -> 'm',
+      N -> 'n',
+      O -> 'o',
+      P -> 'p',
+      Q -> 'q',
+      R -> 'r',
+      S -> 's',
+      T -> 't',
+      U -> 'u',
+      V -> 'v',
+      W -> 'w',
+      X -> 'x',
+      Y -> 'y',
+      Z -> 'z'
+    )
+  }
+
+  val tileEmoji: GameState.TileState => String = {
+    case GameState.TileState.Empty => "⬜"
+    case GameState.TileState.Wrong => "⬜"
+    case GameState.TileState.Almost => "🟨"
+    case GameState.TileState.Correct => "🟩"
+  }
 }
