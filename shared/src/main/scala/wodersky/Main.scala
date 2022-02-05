@@ -11,7 +11,7 @@ import eu.joaocosta.wodersky.Constants._
 
 object Main extends MinartApp {
 
-  val day = (System.currentTimeMillis() / (1000 * 60 * 60 * 24)).toInt
+  val day = (System.currentTimeMillis() / puzzleInterval).toInt - firstPuzzle
   val dictionary = Resource("assets/dictionary.txt").withSource(source =>
     source.getLines().map(_.toLowerCase()).toList
   ).map(scala.util.Random(day).shuffle).get
@@ -54,11 +54,18 @@ object Main extends MinartApp {
     }
   }
 
+  def drawTime(x: Int, y: Int, spacing: Int) = {
+    val nextDayStart = (day + 1 + firstPuzzle).toLong * puzzleInterval
+    val remainingMillis = nextDayStart - System.currentTimeMillis()
+    val remainingHours = math.max(remainingMillis / (1000 * 60 * 60), 0)
+    writeString(x, y, spacing, s"Next in $remainingHours H")
+  }
+
   type State = GameState
   val loopRunner     = LoopRunner()
   val canvasSettings = Canvas.Settings(width = screenWidth, height = screenHeight, scale = 1, clearColor = Color(255, 255, 255))
   val canvasManager  = CanvasManager()
-  val initialState   = GameState(dictionary = dictionary)
+  val initialState   = GameState.InGame(dictionary = dictionary)
   val frameRate      = LoopFrequency.hz60
   val terminateWhen  = (_: State) => false
 
@@ -100,12 +107,34 @@ object Main extends MinartApp {
     )
   }
 
-  def nextState(state: GameState, input: KeyboardInput): GameState = {
-    if (input.keysPressed(KeyboardInput.Key.Backspace))
-      state.backspace
-    else if (input.keysPressed(KeyboardInput.Key.Enter))
-      state.enterGuess
-    else input.keysPressed.flatMap(key => keyToChar.get(key)).headOption.fold(state)(char => state.addChar(char))
+  val tileEmoji: GameState.TileState => String = {
+    case GameState.TileState.Empty => "⬜"
+    case GameState.TileState.Wrong => "⬜"
+    case GameState.TileState.Almost => "🟨"
+    case GameState.TileState.Correct => "🟩"
+  }
+
+  def printShare(guesses: List[List[GameState.TileState]]): Unit = {
+    val fullGuesses = guesses.filter(_ != List.fill(5)(GameState.TileState.Empty))
+    val numGuesses =
+      Option.when(fullGuesses.last == List.fill(5)(GameState.TileState.Correct))(
+        fullGuesses.size.toString).getOrElse("X")
+    println(s"Wodersky #$day: $numGuesses/6")
+    fullGuesses.map(_.map(tileEmoji).mkString).foreach(println)
+  }
+
+  def nextState(state: GameState, input: KeyboardInput): GameState = state match {
+    case st: GameState.InGame =>
+      if (st.finalState) {
+        printShare(st.tiles.map(_.map(_._2)))
+        GameState.Results(st.guesses, st.solution)
+      }
+      else if (input.keysPressed(KeyboardInput.Key.Backspace))
+        st.backspace
+      else if (input.keysPressed(KeyboardInput.Key.Enter))
+        st.enterGuess
+      else input.keysPressed.flatMap(key => keyToChar.get(key)).headOption.fold(st)(char => st.addChar(char))
+    case _ => state
   }
 
   val renderFrame = (state: GameState) => for {
@@ -114,6 +143,11 @@ object Main extends MinartApp {
     _ <- CanvasIO.clear()
     _ <- writeString(titleX, titleY, titleSpacing, title)
     _ <- drawTiles(tilesPadding, tilesY, state.tiles)
-    _ <- drawTiles(keyboardPadding, keyboardY, keyOrder.map(_.map(k => Some(k) -> state.keys(k))))
+    _ <- state match {
+      case st: GameState.InGame =>
+        drawTiles(keyboardPadding, keyboardY, keyOrder.map(_.map(k => Some(k) -> st.keys(k))))
+      case st: GameState.Results =>
+        drawTime(keyboardPadding, keyboardY, titleSpacing)
+    }
   } yield nextState(state, input)
 }

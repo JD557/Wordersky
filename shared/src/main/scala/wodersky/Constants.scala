@@ -1,6 +1,9 @@
 package eu.joaocosta.wodersky
 
 object Constants {
+  val puzzleInterval = (1000 * 60 * 60 * 24)
+  val firstPuzzle = 19028
+
   val tileSize = 32
   val tileSpacing = 4
   val componentSpacing = 16
