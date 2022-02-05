@@ -6,6 +6,8 @@ version := "1.0"
 
 scalaVersion := "3.1.1"
 
+ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
+
 lazy val root =
   crossProject(JVMPlatform, JSPlatform, NativePlatform)
     .in(file("."))
@@ -17,7 +19,11 @@ lazy val root =
           "eu.joaocosta"   %%% "minart-backend" % "0.4.0-SNAPSHOT",
           "eu.joaocosta"   %%% "minart-pure" % "0.4.0-SNAPSHOT",
           "eu.joaocosta"   %%% "minart-image" % "0.4.0-SNAPSHOT",
-        )
+        ),
+        scalafmtOnCompile := true,
+        semanticdbEnabled := true,
+        semanticdbVersion := scalafixSemanticdb.revision,
+        scalafixOnCompile := true
       )
     )
     .jsSettings(

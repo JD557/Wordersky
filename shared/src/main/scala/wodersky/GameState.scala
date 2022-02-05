@@ -11,7 +11,7 @@ sealed trait GameState {
   lazy val tiles: List[List[(Option[Char], TileState)]] = {
     val emptyTile = (None, TileState.Empty)
     val guessedTiles: List[List[(Option[Char], TileState)]] =
-      guesses.map(guess => toTiles(guess, solution).map { case (char, tile) => (Some(char), tile)}).toList
+      guesses.map(guess => toTiles(guess, solution).map { case (char, tile) => (Some(char), tile) }).toList
     val currentGuessTiles: List[(Option[Char], TileState)] =
       (currentGuess.map(char => (Some(char), TileState.Empty)) ++ List.fill(5)(emptyTile)).take(5).toList
     val remainingTiles: List[List[(Option[Char], TileState)]] = List.fill(6, 5)(emptyTile)
@@ -25,12 +25,12 @@ object GameState {
   }
 
   final case class InGame(
-    guesses: List[String] = Nil,
-    currentGuess: String = "",
-    dictionary: List[String] = Nil
+      guesses: List[String] = Nil,
+      currentGuess: String = "",
+      dictionary: List[String] = Nil
   ) extends GameState {
 
-    val solution = dictionary.head
+    val solution   = dictionary.head
     val finalState = guesses.size >= 6 || guesses.lastOption.contains(solution)
 
     def addChar(char: Char): GameState =
@@ -42,10 +42,11 @@ object GameState {
 
     def enterGuess =
       if (currentGuess.size < 5 || !dictionary.contains(currentGuess)) this
-      else copy(
-        guesses = guesses :+ currentGuess,
-        currentGuess = ""
-      )
+      else
+        copy(
+          guesses = guesses :+ currentGuess,
+          currentGuess = ""
+        )
 
     val keys: Map[Char, TileState] = {
       val guessMap = tiles.flatten.groupMap(_._1)(_._2).view.mapValues(_.toSet)
