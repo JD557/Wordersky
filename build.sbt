@@ -1,6 +1,6 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-name := "Space Game"
+name := "Wordersky"
 
 version := "1.0"
 
@@ -33,4 +33,4 @@ lazy val root =
         nativeGC        := "immix"
       )
     )
-    .settings(name := "Space Game Root")
+    .settings(name := "Wordersky")

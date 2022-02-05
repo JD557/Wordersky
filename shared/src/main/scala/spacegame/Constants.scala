@@ -1,23 +1,26 @@
 package eu.joaocosta.spacegame
 
 object Constants {
-  val screenWidth = 600
-  val screenHeight = 800
+  val tileSize = 32
+  val tileSpacing = 4
+  val componentSpacing = 16
+  
+  val fontWidth = 22
+  val fontHeight = 24
 
-  val playerW = 99
-  val playerH = 75
-  val playerY = screenHeight - playerH
-  val playerSpeed = 5
+  val keyboardPadding = 16
 
-  val enemyW = 93
-  val enemyH = 84
-  val enemySpeed = 3
+  val screenWidth = 2 * keyboardPadding + 10 * (tileSize + tileSpacing)
 
-  val laserW = 9
-  val laserH = 54
-  val laserSpeed = 10
+  val title = "Wordersky"
+  val titleSpacing = 4
+  val titleX = (screenWidth - (fontWidth + titleSpacing) * title.size) / 2
+  val titleY = componentSpacing
 
-  val bombW = 48
-  val bombH = 46
-  val bombSpeed = 10
+  val tilesPadding = (screenWidth - (tileSize + tileSpacing) * 5) / 2
+  val tilesY = titleY + fontHeight + componentSpacing
+
+  val keyboardY = tilesY + 6 * (tileSize + tileSpacing) + componentSpacing
+
+  val screenHeight = keyboardY + 3 * (tileSize + tileSpacing) + componentSpacing
 }

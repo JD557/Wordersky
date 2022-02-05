@@ -13,70 +13,74 @@ import scala.util.chaining._
 
 object Main extends MinartApp {
 
-  def updateState(state: GameState, input: KeyboardInput): GameState = {
-    val updatePlayer: GameState => GameState =
-      if (input.isDown(KeyboardInput.Key.Left)) _.movePlayer(-playerSpeed)
-      else if (input.isDown(KeyboardInput.Key.Right)) _.movePlayer(playerSpeed)
-      else identity
+  val dictionary = Resource("assets/dictionary.txt").withSource(source =>
+    source.getLines().map(_.toLowerCase()).toVector
+  ).map(scala.util.Random(0).shuffle).get
 
-    val updateEnemies: GameState => GameState = _.moveEnemies
+  val font = Image.loadQoiImage(Resource("assets/font.qoi")).get
+  val tiles = Image.loadQoiImage(Resource("assets/tiles.qoi")).get
 
-    val updateLasers: GameState => GameState =
-      if (input.keysPressed(KeyboardInput.Key.Space)) _.shootLaser.updateLasers
-      else _.updateLasers
-
-    val updateBombs: GameState => GameState =
-      if (state.enemies.exists(enemy => math.abs(enemy.x-state.player.x) < 3)) _.shootBomb.updateBombs
-      else _.updateBombs
-
-    state.pipe(updatePlayer).pipe(updateEnemies).pipe(updateLasers).pipe(updateBombs).pipe(_.checkCollisions)
+  def writeChar(x: Int, y: Int, char: Char): MSurfaceIO[Unit] = {
+    val (cx, cy) =
+      if (char >= 'a' && char <= 'z') (fontWidth * (char - 'a').toInt, 0)
+      else if (char >= '0' && char <= '9') (fontWidth * (char - '0').toInt, fontHeight)
+      else (25 * fontWidth, fontHeight)
+    MSurfaceIO.blitWithMask(font, Color(255, 255, 255))(x, y, cx, cy, fontWidth, fontHeight)
   }
+
+  def writeString(x: Int, y: Int, padding: Int, string: String): MSurfaceIO[Unit] = {
+    val spacing = fontWidth + padding
+    MSurfaceIO.foreach(string.toLowerCase().zipWithIndex) { case (char, idx) => writeChar(x + idx * spacing, y, char) }
+  }
+
+  def drawTile(x: Int, y: Int, state: GameState.TileState, char: String): MSurfaceIO[Unit] = {
+    val cx = state match {
+      case GameState.TileState.Empty => 0
+      case GameState.TileState.Wrong => tileSize
+      case GameState.TileState.Almost => 2 * tileSize
+      case GameState.TileState.Correct => 3 * tileSize
+    }
+    MSurfaceIO.blitWithMask(tiles, Color(255, 255, 255))(x, y, cx, 0, tileSize, tileSize)
+      .andThen(writeString(x + 5, y + 5, 0, char))
+  }
+
+  def drawTiles(x: Int, y: Int, tiles: List[List[(Option[Char], GameState.TileState)]]): MSurfaceIO[Unit] = {
+    val spacing = tileSize + tileSpacing
+    val offsets = for {
+     (line, yy) <- tiles.zipWithIndex
+     ((char, state), xx) <- line.zipWithIndex 
+    } yield (x + xx * spacing, y + yy * spacing, char.mkString(""), state)
+    MSurfaceIO.foreach(offsets) { case (x, y, char, state) =>
+      drawTile(x, y, state, char)
+    }
+  }
+
+  println(s"Loaded ${dictionary.size} words")
+
+  val day = ((System.currentTimeMillis() / (1000 * 60 * 60 * 24)) % dictionary.size).toInt
+
+  println(s"Word of the day: ${dictionary(day)}")
 
   type State = GameState
   val loopRunner     = LoopRunner()
-  val canvasSettings = Canvas.Settings(width = screenWidth, height = screenHeight, scale = 1)
+  val canvasSettings = Canvas.Settings(width = screenWidth, height = screenHeight, scale = 1, clearColor = Color(255, 255, 255))
   val canvasManager  = CanvasManager()
-  val initialState   = GameState()
+  val initialState   = GameState(List("scala", "circe", "spray"), "teste", dictionary(day))
   val frameRate      = LoopFrequency.hz60
   val terminateWhen  = (_: State) => false
 
-  val backgroundImage = Image.loadBmpImage(Resource("assets/background.bmp")).get
-  val shipImage = Image.loadPpmImage(Resource("assets/ship.ppm")).get
-  val enemyImage = Image.loadPpmImage(Resource("assets/enemy.ppm")).get
-  val hitShipImage = Image.invert(shipImage)
-  val hitEnemyImage = Image.invert(enemyImage)
-  val laserImage = Image.loadPpmImage(Resource("assets/laser.ppm")).get
-  val bombImage = Image.loadBmpImage(Resource("assets/bomb.bmp")).get
-
-  var lastTime = System.currentTimeMillis()
-  var frame = 0
-  def frameTime() = {
-    frame += 1
-    if (frame % 10 == 0) {
-      println("FPS:" + 10000.0 / (System.currentTimeMillis - lastTime))
-      lastTime = System.currentTimeMillis()
-    }
-  }
+  val keyOrder = List(
+    "qwertyuiop",
+    "asdfghjkl",
+    "zxcvbnm",
+  ).map(_.toList)
 
   val renderFrame = (state: GameState) => for {
     _ <- CanvasIO.redraw
-    _ = frameTime()
     input <- CanvasIO.getKeyboardInput
-    newState = updateState(state, input)
     _ <- CanvasIO.clear()
-    _ <- CanvasIO.blit(backgroundImage)(0, 0)
-    _ <- CanvasIO.foreach(newState.lasers) { laser => 
-      CanvasIO.blitWithMask(laserImage, Color(0, 0, 0))(laser.x, laser.y)
-    }
-    _ <- CanvasIO.foreach(newState.bombs) { bomb => 
-      CanvasIO.blitWithMask(bombImage, Color(0, 0, 0))(bomb.x, bomb.y)
-    }
-    _ <- if (newState.player.isHit)
-        CanvasIO.blitWithMask(hitShipImage, Color(255, 255, 255))(newState.player.x, newState.player.y)
-        else CanvasIO.blitWithMask(shipImage, Color(0, 0, 0))(newState.player.x, newState.player.y)
-    _ <- CanvasIO.traverse(newState.enemies) { enemy => if (enemy.isHit)
-        CanvasIO.blitWithMask(hitEnemyImage, Color(255, 255, 255))(enemy.x, enemy.y)
-        else CanvasIO.blitWithMask(enemyImage, Color(0, 0, 0))(enemy.x, enemy.y)
-    }
-  } yield newState
+    _ <- writeString(titleX, titleY, titleSpacing, title)
+    _ <- drawTiles(tilesPadding, tilesY, state.tiles)
+    _ <- drawTiles(keyboardPadding, keyboardY, keyOrder.map(_.map(k => Some(k) -> state.keys(k))))
+  } yield state
 }

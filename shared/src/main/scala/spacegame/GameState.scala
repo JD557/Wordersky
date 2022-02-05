@@ -1,53 +1,54 @@
 package eu.joaocosta.spacegame
 
 import eu.joaocosta.spacegame.Constants._
+import eu.joaocosta.spacegame.GameState._
 
 case class GameState(
-  player: Entity.Player = Entity.Player(0),
-  enemies: List[Entity.Enemy] = List.range(0, 301, 150).map { startX =>
-    Entity.Enemy(startX, 0, startX, startX + screenWidth - Constants.enemyW - 300)
-  },
-  lasers: List[Entity.Laser] = Nil,
-  bombs: List[Entity.Bomb] = Nil
+  guesses: List[String] = Nil,
+  currentGuess: String = "",
+  solution: String = ""
 ) {
+  val tiles: List[List[(Option[Char], TileState)]] = {
+    val emptyTile = (None, TileState.Empty)
+    val guessedTiles: List[List[(Option[Char], TileState)]] =
+      guesses.map(guess => toTiles(guess, solution).map { case (char, tile) => (Some(char), tile)}).toList
+    val currentGuessTiles: List[(Option[Char], TileState)] =
+      (currentGuess.map(char => (Some(char), TileState.Empty)) ++ List.fill(5)(emptyTile)).take(5).toList
+    val remainingTiles: List[List[(Option[Char], TileState)]] = List.fill(6, 5)(emptyTile)
+    (guessedTiles ++ (currentGuessTiles :: remainingTiles)).take(6)
+  }
 
-  def movePlayer(dx: Int) =
-    copy(player = player.move(dx))
+  val keys: Map[Char, TileState] = {
+    val guessMap = tiles.flatten.groupMap(_._1)(_._2).view.mapValues(_.toSet)
+    ('a' to 'z').map { char =>
+      val guesses = guessMap.getOrElse(Some(char), Set.empty)
+      val value =
+        if (guesses(TileState.Correct)) TileState.Correct
+        else if (guesses(TileState.Almost)) TileState.Almost
+        else TileState.Wrong
+      char -> value
+    }.toMap
+  }
+}
 
-  def moveEnemies =
-    copy(enemies = enemies.map(_.move))
+object GameState {
 
-  def updateLasers =
-    copy(lasers = lasers.map(_.move).filter(_.y >= 0))
-
-  def updateBombs =
-    copy(bombs = bombs.map(_.move).filter(_.y < screenHeight))
-
-  def shootLaser =
-    copy(lasers = Entity.Laser(player.x, player.y) :: Entity.Laser(player.x + player.w - Constants.laserW, player.y) :: lasers)
-
-  def shootBomb =
-    copy(bombs = enemies.map(enemy => Entity.Bomb(enemy.x + (enemy.w + Constants.bombW) / 2, enemy.y + Constants.bombH)) ++ bombs)
-
-  def checkCollisions = {
-    val (collidedLasers, freeLasers) = lasers.partition { laser =>
-      enemies.exists(_.collidesWith(laser))
+  def toTiles(string: String, solution: String): List[(Char, TileState)] =
+    if (string.isEmpty || solution.isEmpty) Nil
+    else {
+      val guess = string.head
+      if (guess == solution.head)
+        (guess, TileState.Correct) :: toTiles(string.tail, solution.tail)
+      else if (solution.contains(guess))
+        (guess, TileState.Almost) :: toTiles(string.tail, solution.replaceFirst(guess.toString, "") + solution.head)
+      else
+        (guess, TileState.Wrong) :: toTiles(string.tail, solution.tail + solution.head)
     }
-    val (collidedBombs, freeBombs) = bombs.partition { bomb =>
-      player.collidesWith(bomb)
-    }
-    val playerHit = collidedBombs.nonEmpty
-    val updatedEnemies = enemies.map { enemy =>
-      val isHit = collidedLasers.exists { laser =>
-        enemy.collidesWith(laser)
-      }
-      enemy.setHit(isHit)
-    }
-    copy(
-      player = player.setHit(playerHit),
-      enemies = updatedEnemies,
-      lasers = freeLasers,
-      bombs = freeBombs
-    )
+
+  enum TileState {
+    case Empty
+    case Wrong
+    case Almost
+    case Correct
   }
 }
