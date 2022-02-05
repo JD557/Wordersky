@@ -1,10 +1,11 @@
 package eu.joaocosta.spacegame
 
+import eu.joaocosta.minart.backend.defaults._
+import eu.joaocosta.minart.graphics.image._
 import eu.joaocosta.minart.graphics._
 import eu.joaocosta.minart.graphics.pure._
 import eu.joaocosta.minart.runtime._
 import eu.joaocosta.minart.runtime.pure._
-import eu.joaocosta.minart.extra._
 import eu.joaocosta.minart.input.KeyboardInput
 import eu.joaocosta.spacegame.Constants._
 
@@ -39,14 +40,13 @@ object Main extends MinartApp {
   val frameRate      = LoopFrequency.hz60
   val terminateWhen  = (_: State) => false
 
-  val resourceLoader = ResourceLoader.default()
-  val backgroundImage = Image.loadBmpImage(resourceLoader.loadResource("assets/background.bmp")).get
-  val shipImage = Image.loadPpmImage(resourceLoader.loadResource("assets/ship.ppm")).get
-  val enemyImage = Image.loadPpmImage(resourceLoader.loadResource("assets/enemy.ppm")).get
+  val backgroundImage = Image.loadBmpImage(Resource("assets/background.bmp")).get
+  val shipImage = Image.loadPpmImage(Resource("assets/ship.ppm")).get
+  val enemyImage = Image.loadPpmImage(Resource("assets/enemy.ppm")).get
   val hitShipImage = Image.invert(shipImage)
   val hitEnemyImage = Image.invert(enemyImage)
-  val laserImage = Image.loadPpmImage(resourceLoader.loadResource("assets/laser.ppm")).get
-  val bombImage = Image.loadBmpImage(resourceLoader.loadResource("assets/bomb.bmp")).get
+  val laserImage = Image.loadPpmImage(Resource("assets/laser.ppm")).get
+  val bombImage = Image.loadBmpImage(Resource("assets/bomb.bmp")).get
 
   var lastTime = System.currentTimeMillis()
   var frame = 0
