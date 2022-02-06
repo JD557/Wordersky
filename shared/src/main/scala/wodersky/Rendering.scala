@@ -52,10 +52,12 @@ object Rendering {
   }
 
   def drawTime(x: Int, y: Int, spacing: Int, currentDay: Int) = {
-    val nextDayStart    = (currentDay + 1 + firstPuzzle).toLong * puzzleInterval
-    val remainingMillis = nextDayStart - System.currentTimeMillis()
-    val remainingHours  = math.max(remainingMillis / (1000 * 60 * 60), 0)
-    writeString(x, y, spacing, s"Next in $remainingHours H")
+    val nextDayStart        = (currentDay + 1 + firstPuzzle).toLong * puzzleInterval
+    val remainingMillis     = nextDayStart - System.currentTimeMillis()
+    val remainingHours      = math.max(remainingMillis.toDouble / (1000 * 60 * 60), 0)
+    val remainingIntHours   = remainingHours.toInt
+    val remainingIntMinutes = ((remainingHours - remainingIntHours) * 60).toInt
+    writeString(x, y, spacing, s"Next in ${remainingIntHours}H${remainingIntMinutes}M")
   }
 
   def printShare(guesses: List[List[GameState.TileState]], currentDay: Int): Unit = {
@@ -64,7 +66,9 @@ object Rendering {
       Option
         .when(fullGuesses.last == List.fill(5)(GameState.TileState.Correct))(fullGuesses.size.toString)
         .getOrElse("X")
-    println(s"Wodersky #$currentDay: $numGuesses/6")
-    fullGuesses.map(_.map(tileEmoji).mkString).foreach(println)
+    val strings =
+      s"Wodersky #$currentDay: $numGuesses/6" ::
+        fullGuesses.map(_.map(tileEmoji).mkString)
+    println(strings.mkString("\n"))
   }
 }
