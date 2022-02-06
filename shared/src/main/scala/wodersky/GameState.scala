@@ -61,17 +61,23 @@ object GameState {
     }
   }
 
-  def toTiles(string: String, solution: String): List[(Char, TileState)] =
-    if (string.isEmpty || solution.isEmpty) Nil
-    else {
-      val guess = string.head
-      if (guess == solution.head)
-        (guess, TileState.Correct) :: toTiles(string.tail, solution.tail)
-      else if (solution.contains(guess))
-        (guess, TileState.Almost) :: toTiles(string.tail, solution.replaceFirst(guess.toString, "") + solution.head)
-      else
-        (guess, TileState.Wrong) :: toTiles(string.tail, solution.tail + solution.head)
+  def toTiles(string: String, solution: String): List[(Char, TileState)] = {
+    val worstCase = string
+      .zip(solution)
+      .map { case (c1, c2) =>
+        if (c1 == c2) c1 -> TileState.Correct
+        else c1          -> TileState.Wrong
+      }
+      .toList
+    val letterPool = string.zip(solution).filter(_ != _).map(_._2).mkString("")
+    def aux(tiles: List[(Char, TileState)], pool: String): List[(Char, TileState)] = {
+      lazy val (char, state) = tiles.head
+      if (tiles.isEmpty || pool.isEmpty) tiles
+      else if (state == TileState.Correct || !pool.contains(char)) tiles.head :: aux(tiles.tail, pool)
+      else (char, TileState.Almost) :: aux(tiles.tail, pool.replaceFirst(char.toString, ""))
     }
+    aux(worstCase, letterPool)
+  }
 
   enum TileState {
     case Empty
