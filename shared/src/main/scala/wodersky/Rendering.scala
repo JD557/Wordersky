@@ -16,6 +16,9 @@ object Rendering {
     val (cx, cy) =
       if (char >= 'a' && char <= 'z') (fontWidth * (char - 'a').toInt, 0)
       else if (char >= '0' && char <= '9') (fontWidth * (char - '0').toInt, fontHeight)
+      else if (char == '\b') (fontWidth * 10, fontHeight)
+      else if (char == '\r') (fontWidth * 11, fontHeight)
+      else if (char == ' ') (fontWidth * 12, fontHeight)
       else (25 * fontWidth, fontHeight)
     MSurfaceIO.blitWithMask(font, Color(255, 255, 255))(x, y, cx, cy, fontWidth, fontHeight)
   }

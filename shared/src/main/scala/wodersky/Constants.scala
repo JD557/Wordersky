@@ -17,7 +17,7 @@ object Constants {
 
   val screenWidth = 2 * keyboardPadding + 10 * (tileSize + tileSpacing)
 
-  val title        = "Wordersky"
+  val title        = "!Wordersky!"
   val titleSpacing = 4
   val titleX       = (screenWidth - (fontWidth + titleSpacing) * title.size) / 2
   val titleY       = componentSpacing
@@ -32,7 +32,7 @@ object Constants {
   val keyOrder = List(
     "qwertyuiop",
     "asdfghjkl",
-    "zxcvbnm"
+    "zxcvbnm\b\r"
   ).map(_.toList)
 
   val keyToChar: Map[KeyboardInput.Key, Char] = {
