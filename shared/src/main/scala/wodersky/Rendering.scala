@@ -69,6 +69,6 @@ object Rendering {
     val strings =
       s"Wodersky #$currentDay: $numGuesses/6" ::
         fullGuesses.map(_.map(tileEmoji).mkString)
-    println(strings.mkString("\n"))
+    strings.foreach(println)
   }
 }

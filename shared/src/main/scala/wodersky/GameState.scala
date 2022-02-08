@@ -55,7 +55,8 @@ object GameState {
         val value =
           if (guesses(TileState.Correct)) TileState.Correct
           else if (guesses(TileState.Almost)) TileState.Almost
-          else TileState.Wrong
+          else if (guesses(TileState.Wrong)) TileState.Wrong
+          else TileState.Empty
         char -> value
       }.toMap
     }
