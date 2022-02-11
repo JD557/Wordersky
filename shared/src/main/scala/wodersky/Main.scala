@@ -13,10 +13,14 @@ import eu.joaocosta.wodersky.Rendering._
 object Main extends MinartApp {
 
   val day = (System.currentTimeMillis() / puzzleInterval).toInt - firstPuzzle
-  val dictionary = Resource("assets/dictionary.txt")
+  val answers = Resource("assets/answers.txt")
     .withSource(source => source.getLines().map(_.toLowerCase()).toList)
     .map(scala.util.Random(day).shuffle)
     .get
+  val guesses = Resource("assets/guesses.txt")
+    .withSource(source => source.getLines().map(_.toLowerCase()).toList)
+    .get
+  val dictionary = answers ++ guesses
 
   type State = GameState
   val loopRunner = LoopRunner()
