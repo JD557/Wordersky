@@ -36,7 +36,10 @@ lazy val root =
         nativeLinkStubs := true,
         nativeMode      := "release",
         nativeLTO       := "thin",
-        nativeGC        := "immix"
+        nativeGC        := "immix",
+        nativeConfig ~= {
+          _.withEmbedResources(true)
+        }
       )
     )
     .settings(name := "Wordersky")
