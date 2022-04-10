@@ -15,10 +15,7 @@ lazy val root =
       Seq(
         scalaVersion := "3.1.1",
         libraryDependencies ++= List(
-          "eu.joaocosta"   %%% "minart-core" % "0.4.0-SNAPSHOT",
-          "eu.joaocosta"   %%% "minart-backend" % "0.4.0-SNAPSHOT",
-          "eu.joaocosta"   %%% "minart-pure" % "0.4.0-SNAPSHOT",
-          "eu.joaocosta"   %%% "minart-image" % "0.4.0-SNAPSHOT",
+          "eu.joaocosta"   %%% "minart" % "0.4.0-RC1",
         ),
         scalafmtOnCompile := true,
         semanticdbEnabled := true,
