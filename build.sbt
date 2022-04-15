@@ -4,7 +4,7 @@ name := "Wordersky"
 
 version := "1.0"
 
-scalaVersion := "3.1.1"
+scalaVersion := "3.1.2"
 
 ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 
@@ -13,9 +13,9 @@ lazy val root =
     .in(file("."))
     .settings(
       Seq(
-        scalaVersion := "3.1.1",
+        scalaVersion := "3.1.2",
         libraryDependencies ++= List(
-          "eu.joaocosta"   %%% "minart" % "0.4.0-RC1",
+          "eu.joaocosta"   %%% "minart" % "0.4.0",
         ),
         scalafmtOnCompile := true,
         semanticdbEnabled := true,
