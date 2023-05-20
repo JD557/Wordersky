@@ -1,5 +1,6 @@
 Arrow
 Async
+Atlas
 Beans
 Bigdl
 Blaze
@@ -21,6 +22,7 @@ Codec
 Count
 Debug
 Defer
+Delta
 Diffx
 Dijon
 Enums

@@ -20,7 +20,7 @@ object Rendering {
       else if (char == '\r') (fontWidth * 11, fontHeight)
       else if (char == ' ') (fontWidth * 12, fontHeight)
       else (25 * fontWidth, fontHeight)
-    MSurfaceIO.blitWithMask(font, Color(255, 255, 255))(x, y, cx, cy, fontWidth, fontHeight)
+    MSurfaceIO.blit(font, Some(Color(255, 255, 255)))(x, y, cx, cy, fontWidth, fontHeight)
   }
 
   def writeString(x: Int, y: Int, padding: Int, string: String): MSurfaceIO[Unit] = {
@@ -36,7 +36,7 @@ object Rendering {
       case GameState.TileState.Correct => 3 * tileSize
     }
     MSurfaceIO
-      .blitWithMask(tiles, Color(255, 255, 255))(x, y, cx, 0, tileSize, tileSize)
+      .blit(tiles, Some(Color(255, 255, 255)))(x, y, cx, 0, tileSize, tileSize)
       .andThen(writeString(x + 5, y + 5, 0, char))
   }
 

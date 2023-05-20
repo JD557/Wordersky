@@ -10,7 +10,12 @@ import eu.joaocosta.minart.runtime.pure._
 import eu.joaocosta.wodersky.Constants._
 import eu.joaocosta.wodersky.Rendering._
 
-object Main extends MinartApp {
+object Main extends MinartApp[GameState, LowLevelCanvas] {
+
+  val loopRunner      = LoopRunner()
+  val createSubsystem = () => LowLevelCanvas.create()
+  val canvasSettings =
+    Canvas.Settings(width = screenWidth, height = screenHeight, scale = Some(1), clearColor = Color(255, 255, 255))
 
   val day = (System.currentTimeMillis() / puzzleInterval).toInt - firstPuzzle
   val answers = Resource("assets/answers.txt")
@@ -22,14 +27,7 @@ object Main extends MinartApp {
     .get
   val dictionary = answers ++ guesses
 
-  type State = GameState
-  val loopRunner = LoopRunner()
-  val canvasSettings =
-    Canvas.Settings(width = screenWidth, height = screenHeight, scale = 1, clearColor = Color(255, 255, 255))
-  val canvasManager = CanvasManager()
-  val initialState  = GameState.InGame(dictionary = dictionary)
-  val frameRate     = LoopFrequency.hz60
-  val terminateWhen = (_: State) => false
+  val initialState = GameState.InGame(dictionary = dictionary)
 
   def mouseClick(input: PointerInput): Option[Char] = {
     def absDistance(x1: Int, y1: Int, x2: Int, y2: Int) =
@@ -70,25 +68,28 @@ object Main extends MinartApp {
     case _ => state
   }
 
-  val renderFrame = (state: GameState) =>
-    for {
-      _        <- CanvasIO.redraw
-      keyboard <- CanvasIO.getKeyboardInput
-      _        <- CanvasIO.clear(Set(Canvas.Buffer.KeyboardBuffer))
-      mouse    <- CanvasIO.getPointerInput.map(m => Option.when(!m.isPressed)(m))
-      _        <- CanvasIO.when(mouse.isDefined)(CanvasIO.clear(Set(Canvas.Buffer.PointerBuffer)))
-      _        <- CanvasIO.clear(Set(Canvas.Buffer.Backbuffer))
-      _        <- writeString(titleX, titleY, titleSpacing, title)
-      _        <- drawTiles(tilesPadding, tilesY, state.tiles)
-      _ <- state match {
-        case st: GameState.InGame =>
-          drawTiles(
-            keyboardPadding,
-            keyboardY,
-            keyOrder.map(_.map(k => Some(k) -> st.keys.getOrElse(k, GameState.TileState.Empty)))
-          )
-        case st: GameState.Results =>
-          drawTime(keyboardPadding, keyboardY, titleSpacing, day)
-      }
-    } yield nextState(state, keyboard, mouse)
+  val appLoop = AppLoop
+    .statefulRenderLoop((state: GameState) =>
+      for {
+        _        <- CanvasIO.redraw
+        keyboard <- CanvasIO.getKeyboardInput
+        _        <- CanvasIO.clear(Set(Canvas.Buffer.KeyboardBuffer))
+        mouse    <- CanvasIO.getPointerInput.map(m => Option.when(!m.isPressed)(m))
+        _        <- CanvasIO.when(mouse.isDefined)(CanvasIO.clear(Set(Canvas.Buffer.PointerBuffer)))
+        _        <- CanvasIO.clear(Set(Canvas.Buffer.Backbuffer))
+        _        <- writeString(titleX, titleY, titleSpacing, title)
+        _        <- drawTiles(tilesPadding, tilesY, state.tiles)
+        _ <- state match {
+          case st: GameState.InGame =>
+            drawTiles(
+              keyboardPadding,
+              keyboardY,
+              keyOrder.map(_.map(k => Some(k) -> st.keys.getOrElse(k, GameState.TileState.Empty)))
+            )
+          case st: GameState.Results =>
+            drawTime(keyboardPadding, keyboardY, titleSpacing, day)
+        }
+      } yield nextState(state, keyboard, mouse)
+    )
+    .configure(canvasSettings, LoopFrequency.hz60, initialState)
 }
