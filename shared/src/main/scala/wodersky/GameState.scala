@@ -7,6 +7,7 @@ sealed trait GameState {
   def guesses: List[String]
   def currentGuess: String
   def solution: String
+  def lineDrift: Int
 
   lazy val tiles: List[List[(Option[Char], TileState)]] = {
     val emptyTile = (None, TileState.Empty)
@@ -22,12 +23,14 @@ sealed trait GameState {
 object GameState {
   final case class Results(guesses: List[String] = Nil, solution: String) extends GameState {
     val currentGuess = ""
+    val lineDrift    = 0
   }
 
   final case class InGame(
       guesses: List[String] = Nil,
       currentGuess: String = "",
-      dictionary: List[String] = Nil
+      dictionary: List[String] = Nil,
+      lineDrift: Int = 0
   ) extends GameState {
 
     val solution   = dictionary.head
@@ -41,12 +44,14 @@ object GameState {
       copy(currentGuess = currentGuess.init)
 
     def enterGuess =
-      if (currentGuess.size < 5 || !dictionary.contains(currentGuess)) this
+      if (currentGuess.size < 5 || !dictionary.contains(currentGuess)) copy(lineDrift = 5)
       else
         copy(
           guesses = guesses :+ currentGuess,
           currentGuess = ""
         )
+
+    def updateDrift = if (lineDrift > 0) copy(lineDrift = lineDrift - 1) else this
 
     val keys: Map[Char, TileState] = {
       val guessMap = tiles.flatten.groupMap(_._1)(_._2).view.mapValues(_.toSet)

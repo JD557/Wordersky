@@ -49,8 +49,9 @@ object Main extends MinartApp[GameState, LowLevelCanvas] {
   }
 
   def nextState(state: GameState, keyboard: KeyboardInput, mouse: Option[PointerInput]): GameState = state match {
-    case st: GameState.InGame =>
+    case prevState: GameState.InGame =>
       lazy val mouseInput = mouse.flatMap(mouseClick _)
+      val st              = prevState.updateDrift
       if (st.finalState)
         printShare(st.tiles.map(_.map(_._2)), day)
         GameState.Results(st.guesses, st.solution)
@@ -78,7 +79,7 @@ object Main extends MinartApp[GameState, LowLevelCanvas] {
         _        <- CanvasIO.when(mouse.isDefined)(CanvasIO.clear(Set(Canvas.Buffer.PointerBuffer)))
         _        <- CanvasIO.clear(Set(Canvas.Buffer.Backbuffer))
         _        <- writeString(titleX, titleY, titleSpacing, title)
-        _        <- drawTiles(tilesPadding, tilesY, state.tiles)
+        _        <- drawTiles(tilesPadding, tilesY - state.lineDrift, state.tiles)
         _ <- state match {
           case st: GameState.InGame =>
             drawTiles(
