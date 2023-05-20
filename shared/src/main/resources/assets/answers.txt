@@ -3,6 +3,7 @@ Apply
 Array
 Await
 Bloop
+Bleep
 Circe
 Class
 Curry

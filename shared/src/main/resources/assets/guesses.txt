@@ -39,6 +39,7 @@ Flink
 Float
 Flows
 Fpoop
+Graal
 Guard
 Ismap
 Isseq
@@ -49,6 +50,7 @@ Libra
 Lists
 Local
 Longs
+Lwjgl
 Major
 Maven
 Minor
@@ -68,9 +70,11 @@ Stdin
 Swing
 Swiss
 Tapir
+Teavm
 Topic
 Trace
 Vault
+Vcpkg
 Vertx
 Views
 Zpure
